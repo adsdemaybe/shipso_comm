@@ -28,8 +28,6 @@ This schema models:
 | messages   | name_id       | user_login| id                | Many messages → one user |
 | messages   | document_id   | documents | id                | Many messages → one document (optional) |
 
-[5][6]
-
 ***
 
 ## Tables
