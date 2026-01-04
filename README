@@ -23,8 +23,6 @@ Chat Interface:
 - Schema
     - User
         - Name
-        - Text
-        - Time
         - Id
     - Document/Form
         - Name

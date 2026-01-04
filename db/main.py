@@ -1,5 +1,8 @@
 import psycopg2
 from sqlalchemy import create_engine, text
+import fastapi
+
+my_app = 
 
 DB_URL = "postgresql+psycopg2://advaithvecham:advaith@localhost:5432/mydb"
 engine = create_engine(DB_URL, echo=True)
