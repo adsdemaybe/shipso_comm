@@ -1,0 +1,163 @@
+## Overview
+
+This README documents the relational schema for the core PostgreSQL tables used in the communication app: **roles**, **user_login**, **documents**, and **messages**.[1][2]
+
+***
+
+## Schema Purpose
+
+This schema models:
+
+- Application **users** with authentication details and assigned **roles**.  
+- **Documents/forms** that can be associated with conversations.  
+- **Messages** sent by users, optionally linked to a specific document.[3]
+
+***
+
+## Entity Relationship Summary
+
+- Each **user** has one **role** (many users → one role).  
+- Each **message** is sent by exactly one **user**.  
+- Each **message** may optionally reference one **document**.[4][5]
+
+### Relationship Table
+
+| From table  | Column        | To table   | Referenced column | Cardinality          |
+|------------|---------------|-----------|-------------------|----------------------|
+| user_login | role_id       | roles     | role_id           | Many users → one role |
+| messages   | name_id       | user_login| id                | Many messages → one user |
+| messages   | document_id   | documents | id                | Many messages → one document (optional) |
+
+[5][6]
+
+***
+
+## Tables
+
+### 1. roles
+
+Holds application-level roles for authorization (e.g., admin, manager, viewer).[7]
+
+```sql
+CREATE TABLE roles (
+    role_id SERIAL PRIMARY KEY,
+    role_name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
+);
+```
+
+- **role_id**: Integer primary key.  
+- **role_name**: Human-readable unique role identifier.  
+- **description**: Optional description of the role’s purpose.[8]
+
+***
+
+### 2. user_login
+
+Stores user identity, login credentials, and role assignment.[4]
+
+```sql
+CREATE TABLE user_login (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    user_id SERIAL UNIQUE NOT NULL,
+    role_id INTEGER REFERENCES roles(role_id) ON DELETE RESTRICT
+);
+```
+
+- **id**: Internal primary key used by foreign keys in other tables.  
+- **user_id**: Secondary unique identifier (optional external/business id).  
+- **username / email**: Unique credentials for login and contact.  
+- **password_hash**: Hashed password, never store raw passwords.  
+- **role_id**: Foreign key to `roles.role_id`, restricting delete if users exist.[9][5]
+
+***
+
+### 3. documents
+
+Represents documents/forms that messages can reference, including flexible key–value fields.[10]
+
+```sql
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    text TEXT,
+    fields JSONB
+);
+```
+
+- **id**: Primary key for document identity.  
+- **name**: Human-readable document name or title.  
+- **text**: Full document body or main content.  
+- **fields**: JSONB for structured form fields as key–value pairs.[11][12]
+
+***
+
+### 4. messages
+
+Captures individual messages in conversations, including sender and optional document link.
+
+```sql
+CREATE TABLE messages (
+    message_id SERIAL PRIMARY KEY,
+    text TEXT NOT NULL,
+    document_id INTEGER REFERENCES documents(id) ON DELETE SET NULL,
+    name_id INTEGER NOT NULL REFERENCES user_login(id) ON DELETE CASCADE
+);
+```
+
+- **message_id**: Primary key for the message.  
+- **text**: Message body.  
+- **document_id**: Nullable foreign key to `documents.id`; set to NULL if the document is deleted.  
+- **name_id**: Foreign key to `user_login.id` representing the sender; cascades delete when the user is removed.[6][5]
+
+***
+
+Communication App that does the following:
+- Stakeholder A talks to Stakeholder B about current shipping process
+    - While talking, information is updated in the database
+- Stakeholder A initiates Document A to be filled out automatically
+    - Information is retrieved in three manners: 
+        - Database/Stored information from conversation
+        - Database connection by either Stakeholder A or Stakeholder B
+        - Natural Language Prompting by Stakeholder A
+    - This information is parsed and an AI agent fills Document A out
+- Stakeholder A sends Document A to Stakeholder B for verification
+- If mistake is found by Stakeholder B, then Stakeholder A fixes it
+    - Either through NLP
+    - By Manual Entry
+- This process repeats until both parties verify the document is correct
+
+
+How this will look like:
+- Two interfaces
+    - Chat Interface
+    - Form
+
+Chat Interface:
+- Schema
+    - UserLogin
+        - Username
+        - Name
+        - Email
+        - Password
+        - UserId
+        - Id
+        - RoleId
+    - Roles
+        - RoleId
+        - RoleName
+        - Description
+    - Document/Form
+        - Name
+        - Text
+        - Fields (Key Value Pairs) // This can be done later
+        - Id
+    - Messages
+        - Text
+        - MessageID
+        - DocumentID
+        - NameID (sender)
