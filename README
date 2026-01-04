@@ -1,0 +1,38 @@
+Communication App that does the following:
+- Stakeholder A talks to Stakeholder B about current shipping process
+    - While talking, information is updated in the database
+- Stakeholder A initiates Document A to be filled out automatically
+    - Information is retrieved in three manners: 
+        - Database/Stored information from conversation
+        - Database connection by either Stakeholder A or Stakeholder B
+        - Natural Language Prompting by Stakeholder A
+    - This information is parsed and an AI agent fills Document A out
+- Stakeholder A sends Document A to Stakeholder B for verification
+- If mistake is found by Stakeholder B, then Stakeholder A fixes it
+    - Either through NLP
+    - By Manual Entry
+- This process repeats until both parties verify the document is correct
+
+
+How this will look like:
+- Two interfaces
+    - Chat Interface
+    - Form
+
+Chat Interface:
+- Schema
+    - User
+        - Name
+        - Text
+        - Time
+        - Id
+    - Document/Form
+        - Name
+        - Text
+        - Field (Key Value Pairs)
+        - Id
+    - Messages
+        - Text
+        - MessageID
+        - DocumentID
+        - NameID (sender)
