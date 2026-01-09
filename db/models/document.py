@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Dict
 
+
 class Document(BaseModel):
 	name: str = Field(..., description="Name of the document/form")
 	text: str = Field(..., description="Raw text/content of the document")

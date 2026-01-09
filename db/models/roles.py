@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class Role(BaseModel):
 	role_id: str = Field(..., description="Role identifier")
 	role_name: str = Field(..., description="Name of the role")

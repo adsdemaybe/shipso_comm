@@ -3,13 +3,19 @@ from fastapi import FastAPI, HTTPException
 import os
 import json
 from pathlib import Path
-from typing import Optional, Dict
 from dotenv import load_dotenv
 
-from models.document import Document
-from models.message import Message
-from models.user_logins import UserLogin
-from models.roles import Role
+from db.models.api_schemas import (
+    DocumentCreate,
+    DocumentOut,
+    HealthOut,
+    MessageCreate,
+    MessageOut,
+    RoleCreate,
+    RoleOut,
+    UserCreate,
+    UserOut,
+)
 
 my_app = FastAPI(title = "Shipso Comms - DB Module",
                 description="Database module for Shipso Comms application",
@@ -27,8 +33,8 @@ engine = create_engine(DB_URL, echo=True)
 
 # --- API Endpoints ---
 # Create Role
-@my_app.post("/roles")
-def create_role(role: Role):
+@my_app.post("/roles", response_model=RoleOut)
+def create_role(role: RoleCreate) -> RoleOut:
     try:
         with engine.begin() as conn:
             res = conn.execute(
@@ -40,24 +46,23 @@ def create_role(role: Role):
                 {"role_name": role.role_name, "description": role.description}
             )
             role_id = res.scalar()
-        return {"role_id": role_id}
+        return RoleOut(role_id=str(role_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 # Create User Login
-@my_app.post("/users")
-def create_user_login(user: UserLogin):
+@my_app.post("/users", response_model=UserOut)
+def create_user_login(user: UserCreate) -> UserOut:
     params = {
         "username": user.username,
         "name": user.name,
         "email": user.email,
-        # Expect hashed password per schema README
-        "password_hash": getattr(user, "password_hash", None) or getattr(user, "password", None),
+        "password_hash": user.password_hash,
         "role_id": user.role_id,
     }
     try:
         with engine.begin() as conn:
-            if getattr(user, "user_id", None) is None:
+            if user.user_id is None:
                 res = conn.execute(
                     text("""
                         INSERT INTO user_login (username, name, email, password_hash, role_id)
@@ -77,14 +82,14 @@ def create_user_login(user: UserLogin):
                     params
                 )
             new_id = res.scalar()
-        return {"id": new_id}
+        return UserOut(id=str(new_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 # Create Document
-@my_app.post("/documents")
-def create_document(doc: Document):
-    fields_json = json.dumps(getattr(doc, "fields", None)) if getattr(doc, "fields", None) is not None else None
+@my_app.post("/documents", response_model=DocumentOut)
+def create_document(doc: DocumentCreate) -> DocumentOut:
+    fields_json = json.dumps(doc.fields) if doc.fields is not None else None
     try:
         with engine.begin() as conn:
             res = conn.execute(
@@ -93,16 +98,16 @@ def create_document(doc: Document):
                     VALUES (:name, :text, CAST(:fields AS JSONB))
                     RETURNING id
                 """),
-                {"name": doc.name, "text": getattr(doc, "text", None), "fields": fields_json}
+                {"name": doc.name, "text": doc.text, "fields": fields_json}
             )
             doc_id = res.scalar()
-        return {"id": doc_id}
+        return DocumentOut(id=str(doc_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 # Create Message
-@my_app.post("/messages")
-def create_message(msg: Message):
+@my_app.post("/messages", response_model=MessageOut)
+def create_message(msg: MessageCreate) -> MessageOut:
     try:
         with engine.begin() as conn:
             res = conn.execute(
@@ -113,22 +118,22 @@ def create_message(msg: Message):
                 """),
                 {
                     "text": msg.text,
-                    "document_id": getattr(msg, "document_id", None),
-                    "name_id": getattr(msg, "name_id", None),
+                    "document_id": msg.document_id,
+                    "name_id": msg.name_id,
                 }
             )
             message_id = res.scalar()
-        return {"message_id": message_id}
+        return MessageOut(message_id=str(message_id))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 # Health
-@my_app.get("/health")
-def health():
+@my_app.get("/health", response_model=HealthOut)
+def health() -> HealthOut:
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return {"status": "ok"}
+        return HealthOut(status="ok")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,2 +1,39 @@
 .env
 db/.env
+
+# Env files (keep examples)
+.env.*
+!.env.example
+!.env.*.example
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.idea/
+
+# Frontend
+frontend/.env
+frontend/node_modules/

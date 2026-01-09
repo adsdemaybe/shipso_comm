@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class Message(BaseModel):
     text: str = Field(..., description="Message text content")
     message_id: str = Field(..., description="Unique identifier for the message")

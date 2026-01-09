@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
 class UserLogin(BaseModel):
     username: str = Field(..., description="Unique username for login")
     name: str = Field(..., description="Full name of the user")

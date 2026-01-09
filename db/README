@@ -118,6 +118,27 @@ Communication App that does the following:
 - Stakeholder A talks to Stakeholder B about current shipping process
     - While talking, information is updated in the database
 - Stakeholder A initiates Document A to be filled out automatically
+
+***
+
+## Running the backend (uvicorn)
+
+From the repo root:
+
+- Ensure `db/.env` exists and contains `DATABASE_URL=...`
+- Start the API:
+    - `uvicorn db.api:my_app --reload --port 8000`
+
+## Example API requests
+
+- Health:
+    - `curl -s http://127.0.0.1:8000/health`
+
+- Create role:
+    - `curl -s -X POST http://127.0.0.1:8000/roles -H 'Content-Type: application/json' -d '{"role_name":"admin","description":"Admin role"}'`
+
+- Create document (JSONB fields):
+    - `curl -s -X POST http://127.0.0.1:8000/documents -H 'Content-Type: application/json' -d '{"name":"Shipment Doc","text":"example","fields":{"shipment":{"container_number":"ABCD1234567"},"flags":{"hazmat":false},"cargo":[{"sku":"SKU-001","qty":120}]}}'`
     - Information is retrieved in three manners: 
         - Database/Stored information from conversation
         - Database connection by either Stakeholder A or Stakeholder B
